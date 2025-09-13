@@ -23,7 +23,7 @@ class _SplashViewState extends State<SplashView> {
     return const Scaffold(
       body: Center(
         child: Text(
-          'DoneTonic',
+          'EduKids',
           style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
         ),
       ),
