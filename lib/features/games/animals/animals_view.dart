@@ -12,22 +12,22 @@ class _AnimalsViewState extends State<AnimalsView> {
   final List<Map<String, String>> animals = [
     {
       "name": "Perro",
-      "image": "assets/images/dog.png",
+      "image": "assets/images/animals/dog.png",
       "sound": "sounds/animals/dog.mp3",
     },
     {
       "name": "Gato",
-      "image": "assets/images/cat.png",
+      "image": "assets/images/animals/cat.png",
       "sound": "sounds/animals/cat.mp3",
     },
     {
       "name": "Vaca",
-      "image": "assets/images/cow.png",
+      "image": "assets/images/animals/cow.png",
       "sound": "sounds/animals/cow.mp3",
     },
     {
       "name": "Pájaro",
-      "image": "assets/images/bird.png",
+      "image": "assets/images/animals/bird.png",
       "sound": "sounds/animals/bird.mp3",
     },
   ];
@@ -51,7 +51,7 @@ class _AnimalsViewState extends State<AnimalsView> {
       if (!mounted) return;
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(const SnackBar(content: Text("¡Correcto! 🎉")));
+      ).showSnackBar(const SnackBar(content: Text("¡Correcto!")));
 
       if (validatedIndexes.length == animals.length) {
         if (!mounted) return;

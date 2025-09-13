@@ -54,11 +54,38 @@ flutter:
   uses-material-design: true
 
   assets:
-    - assets/images/
+    - assets/images/animals/
+    - assets/images/colors/
+    - assets/images/letters/
+    - assets/images/numbers/
+
     - assets/sounds/animals/dog.mp3
     - assets/sounds/animals/cat.mp3
     - assets/sounds/animals/cow.mp3
     - assets/sounds/animals/bird.mp3
+
+    - assets/sounds/colors/blue.mp3
+    - assets/sounds/colors/green.mp3
+    - assets/sounds/colors/red.mp3
+    - assets/sounds/colors/yellow.mp3
+
+    - assets/sounds/letters/a.mp3
+    - assets/sounds/letters/e.mp3
+    - assets/sounds/letters/i.mp3
+    - assets/sounds/letters/o.mp3
+    - assets/sounds/letters/u.mp3
+
+    - assets/sounds/numbers/num_1.mp3
+    - assets/sounds/numbers/num_2.mp3
+    - assets/sounds/numbers/num_3.mp3
+    - assets/sounds/numbers/num_4.mp3
+    - assets/sounds/numbers/num_5.mp3
+    - assets/sounds/numbers/num_6.mp3
+    - assets/sounds/numbers/num_7.mp3
+    - assets/sounds/numbers/num_8.mp3
+    - assets/sounds/numbers/num_9.mp3
+    - assets/sounds/numbers/num_10.mp3
+
     - assets/animations/
 
   # To add assets to your application, add an assets section, like this:
