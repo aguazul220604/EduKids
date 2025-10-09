@@ -1,5 +1,4 @@
 class AppRoutes {
-  static const splash = '/splash';
   static const menu = '/menu';
   static const animals = '/animals';
   static const colors = '/colors';

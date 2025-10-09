@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../../services/audio_service.dart';
 
 class ColorsView extends StatefulWidget {
@@ -69,15 +70,13 @@ class _ColorsViewState extends State<ColorsView> {
     });
 
     if (validatedColors.length == colorsGame.length) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("¡Completaste los colores!")),
-      );
-
-      Future.delayed(const Duration(seconds: 2), () {
-        if (mounted) {
-          Navigator.pushReplacementNamed(context, "/menu");
-        }
+      Future.delayed(const Duration(milliseconds: 500), () {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const CongratulationsScreen(),
+          ),
+        );
       });
     }
   }
@@ -89,29 +88,72 @@ class _ColorsViewState extends State<ColorsView> {
         : null;
 
     return Scaffold(
-      appBar: AppBar(title: const Text("Juego: Colores")),
+      backgroundColor: const Color.fromARGB(255, 255, 126, 171),
+      appBar: AppBar(
+        title: Text(
+          "Colorcitos",
+          style: GoogleFonts.fredoka(fontSize: 24, color: Colors.white),
+        ),
+        backgroundColor: const Color.fromARGB(255, 255, 72, 136),
+        centerTitle: true,
+      ),
       body: Column(
-        mainAxisAlignment: MainAxisAlignment.start,
         children: [
           const SizedBox(height: 20),
-          Wrap(
-            spacing: 20,
-            children: colorsGame.asMap().entries.map((entry) {
-              final index = entry.key;
-              final color = entry.value;
+          Center(
+            child: Wrap(
+              spacing: 20,
+              runSpacing: 20,
+              alignment: WrapAlignment.center,
+              children: colorsGame.asMap().entries.map((entry) {
+                final index = entry.key;
+                final color = entry.value;
+                final isValidated = validatedColors.contains(index);
 
-              return GestureDetector(
-                onTap: () => _playColorSound(index),
-                child: CircleAvatar(
-                  radius: 30,
-                  backgroundColor: color["color"],
-                  child: validatedColors.contains(index)
-                      ? const Icon(Icons.check, color: Colors.white)
-                      : null,
-                ),
-              );
-            }).toList(),
+                return GestureDetector(
+                  onTap: () => _playColorSound(index),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        width: 70,
+                        height: 70,
+                        decoration: BoxDecoration(
+                          color: color["color"],
+                          shape: BoxShape.circle,
+                          border: Border.all(color: Colors.white, width: 3),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black26,
+                              blurRadius: 6,
+                              offset: const Offset(2, 2),
+                            ),
+                          ],
+                        ),
+                        child: isValidated
+                            ? const Icon(
+                                Icons.check,
+                                color: Colors.white,
+                                size: 32,
+                              )
+                            : null,
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        color["name"],
+                        style: GoogleFonts.fredoka(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }).toList(),
+            ),
           ),
+
           const SizedBox(height: 30),
 
           if (currentColor != null)
@@ -119,14 +161,71 @@ class _ColorsViewState extends State<ColorsView> {
               child: GridView.count(
                 crossAxisCount: 2,
                 padding: const EdgeInsets.all(20),
-                crossAxisSpacing: 10,
-                mainAxisSpacing: 10,
+                crossAxisSpacing: 20,
+                mainAxisSpacing: 20,
                 children: currentColor["images"].map<Widget>((imgPath) {
-                  return Image.asset(imgPath, fit: BoxFit.contain);
+                  return Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black26,
+                          blurRadius: 6,
+                          offset: const Offset(2, 2),
+                        ),
+                      ],
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(16),
+                      child: Image.asset(imgPath, fit: BoxFit.cover),
+                    ),
+                  );
                 }).toList(),
               ),
             ),
         ],
+      ),
+    );
+  }
+}
+
+class CongratulationsScreen extends StatelessWidget {
+  const CongratulationsScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color.fromARGB(255, 199, 224, 122),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Image.asset("assets/images/congrats.png", width: 200),
+            const SizedBox(height: 30),
+            Text(
+              "¡Felicidades!",
+              style: GoogleFonts.fredoka(fontSize: 36, color: Colors.white),
+            ),
+            const SizedBox(height: 10),
+            Text(
+              "Completaste el juego",
+              style: GoogleFonts.fredoka(fontSize: 20, color: Colors.black87),
+            ),
+            const SizedBox(height: 40),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.orange,
+                padding: const EdgeInsets.all(16),
+                shape: const CircleBorder(),
+              ),
+              onPressed: () {
+                Navigator.pushReplacementNamed(context, "/menu");
+              },
+              child: const Icon(Icons.home, size: 32, color: Colors.white),
+            ),
+          ],
+        ),
       ),
     );
   }

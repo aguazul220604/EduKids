@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../../services/audio_service.dart';
 
 class AnimalsView extends StatefulWidget {
@@ -48,21 +49,14 @@ class _AnimalsViewState extends State<AnimalsView> {
     if (animals[index]["name"] == correctAnswer) {
       validatedIndexes.add(index);
 
-      if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text("¡Correcto!")));
-
       if (validatedIndexes.length == animals.length) {
-        if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("¡Completaste todos los animales!")),
-        );
-
-        Future.delayed(const Duration(seconds: 2), () {
-          if (mounted) {
-            Navigator.pushReplacementNamed(context, "/menu");
-          }
+        Future.delayed(const Duration(milliseconds: 500), () {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const CongratulationsScreen(),
+            ),
+          );
         });
       } else {
         int nextIndex = (currentIndex + 1) % animals.length;
@@ -86,31 +80,122 @@ class _AnimalsViewState extends State<AnimalsView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Juego: Animales")),
+      backgroundColor: const Color(0xFFB4DF37),
+      appBar: AppBar(
+        title: Text(
+          "Animalitos",
+          style: GoogleFonts.fredoka(fontSize: 24, color: Colors.white),
+        ),
+        backgroundColor: const Color.fromARGB(255, 57, 139, 61),
+        centerTitle: true,
+      ),
       body: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
         children: [
+          const SizedBox(height: 30),
           ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.orange,
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
             onPressed: _playCurrentSound,
-            child: const Text("Reproducir sonido"),
+            child: Text(
+              "🔊 Escuchemos",
+              style: GoogleFonts.fredoka(fontSize: 20, color: Colors.white),
+            ),
           ),
-          const SizedBox(height: 20),
-          Wrap(
-            spacing: 20,
-            children: animals.asMap().entries.map((entry) {
-              final index = entry.key;
-              final animal = entry.value;
-
-              return GestureDetector(
-                onTap: () => _onAnimalTap(index),
-                child: Opacity(
-                  opacity: validatedIndexes.contains(index) ? 0.4 : 1.0,
-                  child: Image.asset(animal["image"]!, width: 100, height: 100),
-                ),
-              );
-            }).toList(),
+          const SizedBox(height: 30),
+          Expanded(
+            child: GridView.builder(
+              padding: const EdgeInsets.all(20),
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2, // 2 columnas
+                crossAxisSpacing: 20,
+                mainAxisSpacing: 20,
+              ),
+              itemCount: animals.length,
+              itemBuilder: (context, index) {
+                final animal = animals[index];
+                return GestureDetector(
+                  onTap: () => _onAnimalTap(index),
+                  child: Opacity(
+                    opacity: validatedIndexes.contains(index) ? 0.4 : 1.0,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(20),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black26,
+                            blurRadius: 6,
+                            offset: const Offset(2, 2),
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Image.asset(animal["image"]!, width: 90, height: 90),
+                          const SizedBox(height: 10),
+                          Text(
+                            animal["name"]!,
+                            style: GoogleFonts.fredoka(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class CongratulationsScreen extends StatelessWidget {
+  const CongratulationsScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color.fromARGB(255, 199, 224, 122),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Image.asset("assets/images/congrats.png", width: 200),
+            const SizedBox(height: 30),
+            Text(
+              "¡Felicidades!",
+              style: GoogleFonts.fredoka(fontSize: 36, color: Colors.white),
+            ),
+            const SizedBox(height: 10),
+            Text(
+              "Completaste el juego",
+              style: GoogleFonts.fredoka(fontSize: 20, color: Colors.black87),
+            ),
+            const SizedBox(height: 40),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.orange,
+                padding: const EdgeInsets.all(16),
+                shape: const CircleBorder(),
+              ),
+              onPressed: () {
+                Navigator.pushReplacementNamed(context, "/menu");
+              },
+              child: const Icon(Icons.home, size: 32, color: Colors.white),
+            ),
+          ],
+        ),
       ),
     );
   }
