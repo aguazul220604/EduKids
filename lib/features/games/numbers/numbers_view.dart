@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../services/audio_service.dart';
-import '../../../core/constants/app_routes.dart';
 
 class NumbersView extends StatefulWidget {
   const NumbersView({super.key});
