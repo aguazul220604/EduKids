@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../services/audio_service.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class ColorsView extends StatefulWidget {
   const ColorsView({super.key});
@@ -9,17 +11,19 @@ class ColorsView extends StatefulWidget {
   State<ColorsView> createState() => _ColorsViewState();
 }
 
-class _ColorsViewState extends State<ColorsView> {
+class _ColorsViewState extends State<ColorsView>
+    with SingleTickerProviderStateMixin {
+  String? _userName;
   final List<Map<String, dynamic>> colorsGame = [
     {
       "name": "Rojo",
       "color": Colors.red,
       "sound": "sounds/colors/red.mp3",
       "images": [
-        "assets/images/colors/red_1.jpg",
-        "assets/images/colors/red_2.jpg",
-        "assets/images/colors/red_3.jpg",
-        "assets/images/colors/red_4.jpg",
+        "assets/images/colors/red_1.png",
+        "assets/images/colors/red_2.png",
+        "assets/images/colors/red_3.png",
+        "assets/images/colors/red_4.png",
       ],
     },
     {
@@ -27,10 +31,10 @@ class _ColorsViewState extends State<ColorsView> {
       "color": Colors.blue,
       "sound": "sounds/colors/blue.mp3",
       "images": [
-        "assets/images/colors/blue_1.jpg",
-        "assets/images/colors/blue_2.jpg",
-        "assets/images/colors/blue_3.jpg",
-        "assets/images/colors/blue_4.jpg",
+        "assets/images/colors/blue_1.png",
+        "assets/images/colors/blue_2.png",
+        "assets/images/colors/blue_3.png",
+        "assets/images/colors/blue_4.png",
       ],
     },
     {
@@ -38,10 +42,10 @@ class _ColorsViewState extends State<ColorsView> {
       "color": Colors.green,
       "sound": "sounds/colors/green.mp3",
       "images": [
-        "assets/images/colors/green_1.jpg",
-        "assets/images/colors/green_2.jpg",
-        "assets/images/colors/green_3.jpg",
-        "assets/images/colors/green_4.jpg",
+        "assets/images/colors/green_1.png",
+        "assets/images/colors/green_2.png",
+        "assets/images/colors/green_3.png",
+        "assets/images/colors/green_4.png",
       ],
     },
     {
@@ -49,35 +53,91 @@ class _ColorsViewState extends State<ColorsView> {
       "color": Colors.yellow,
       "sound": "sounds/colors/yellow.mp3",
       "images": [
-        "assets/images/colors/yellow_1.jpg",
-        "assets/images/colors/yellow_2.jpg",
-        "assets/images/colors/yellow_3.jpg",
-        "assets/images/colors/yellow_4.jpg",
+        "assets/images/colors/yellow_1.png",
+        "assets/images/colors/yellow_2.png",
+        "assets/images/colors/yellow_3.png",
+        "assets/images/colors/yellow_4.png",
       ],
     },
   ];
 
   int? selectedColorIndex;
   Set<int> validatedColors = {};
+  bool isButtonDisabled = false;
 
-  void _playColorSound(int index) async {
+  // Animación de rebote
+  late AnimationController _controller;
+  late Animation<double> _scaleAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserName();
+
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 400),
+    );
+    _scaleAnimation = Tween<double>(
+      begin: 0.9,
+      end: 1.1,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.elasticOut));
+  }
+
+  Future<void> _loadUserName() async {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) return;
+
+    final doc = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(uid)
+        .get();
+    setState(() {
+      _userName = doc.data()?['name'] ?? 'Jugador';
+    });
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  Future<void> _playColorSound(int index) async {
+    if (isButtonDisabled) return;
+
+    setState(() => isButtonDisabled = true);
+
     final color = colorsGame[index];
+
+    // Inicia animación de rebote
+    _controller.forward(from: 0.0);
+
+    // Reproduce el sonido
     await AudioService.playSound(color["sound"]!);
 
+    // Marca como seleccionado
     setState(() {
       selectedColorIndex = index;
       validatedColors.add(index);
     });
 
+    // Pausa breve antes de desbloquear
+    await Future.delayed(const Duration(seconds: 2));
+
     if (validatedColors.length == colorsGame.length) {
+      // Si ya terminó todos los colores
       Future.delayed(const Duration(milliseconds: 500), () {
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
-            builder: (context) => const CongratulationsScreen(),
+            builder: (context) =>
+                CongratulationsScreen(userName: _userName ?? 'Jugador'),
           ),
         );
       });
+    } else {
+      setState(() => isButtonDisabled = false); // desbloquea botones
     }
   }
 
@@ -100,6 +160,7 @@ class _ColorsViewState extends State<ColorsView> {
       body: Column(
         children: [
           const SizedBox(height: 20),
+          // Botones de colores
           Center(
             child: Wrap(
               spacing: 20,
@@ -111,32 +172,35 @@ class _ColorsViewState extends State<ColorsView> {
                 final isValidated = validatedColors.contains(index);
 
                 return GestureDetector(
-                  onTap: () => _playColorSound(index),
+                  onTap: isButtonDisabled ? null : () => _playColorSound(index),
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Container(
-                        width: 70,
-                        height: 70,
-                        decoration: BoxDecoration(
-                          color: color["color"],
-                          shape: BoxShape.circle,
-                          border: Border.all(color: Colors.white, width: 3),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black26,
-                              blurRadius: 6,
-                              offset: const Offset(2, 2),
-                            ),
-                          ],
+                      ScaleTransition(
+                        scale: _scaleAnimation,
+                        child: Container(
+                          width: 70,
+                          height: 70,
+                          decoration: BoxDecoration(
+                            color: color["color"],
+                            shape: BoxShape.circle,
+                            border: Border.all(color: Colors.white, width: 3),
+                            boxShadow: const [
+                              BoxShadow(
+                                color: Colors.black26,
+                                blurRadius: 6,
+                                offset: Offset(2, 2),
+                              ),
+                            ],
+                          ),
+                          child: isValidated
+                              ? const Icon(
+                                  Icons.check,
+                                  color: Colors.white,
+                                  size: 32,
+                                )
+                              : null,
                         ),
-                        child: isValidated
-                            ? const Icon(
-                                Icons.check,
-                                color: Colors.white,
-                                size: 32,
-                              )
-                            : null,
                       ),
                       const SizedBox(height: 8),
                       Text(
@@ -154,8 +218,9 @@ class _ColorsViewState extends State<ColorsView> {
             ),
           ),
 
-          const SizedBox(height: 30),
+          const SizedBox(height: 70),
 
+          // Mostrar imágenes del color seleccionado
           if (currentColor != null)
             Expanded(
               child: GridView.count(
@@ -168,17 +233,20 @@ class _ColorsViewState extends State<ColorsView> {
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(16),
-                      boxShadow: [
+                      boxShadow: const [
                         BoxShadow(
                           color: Colors.black26,
                           blurRadius: 6,
-                          offset: const Offset(2, 2),
+                          offset: Offset(2, 2),
                         ),
                       ],
                     ),
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(16),
-                      child: Image.asset(imgPath, fit: BoxFit.cover),
+                      child: Container(
+                        color: Colors.white,
+                        child: Image.asset(imgPath, fit: BoxFit.contain),
+                      ),
                     ),
                   );
                 }).toList(),
@@ -191,7 +259,9 @@ class _ColorsViewState extends State<ColorsView> {
 }
 
 class CongratulationsScreen extends StatelessWidget {
-  const CongratulationsScreen({super.key});
+  final String userName;
+
+  const CongratulationsScreen({super.key, required this.userName});
 
   @override
   Widget build(BuildContext context) {
@@ -208,6 +278,14 @@ class CongratulationsScreen extends StatelessWidget {
               style: GoogleFonts.fredoka(fontSize: 36, color: Colors.white),
             ),
             const SizedBox(height: 10),
+            Text(
+              userName,
+              style: GoogleFonts.fredoka(
+                fontSize: 26,
+                color: Colors.orange.shade800,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
             Text(
               "Completaste el juego",
               style: GoogleFonts.fredoka(fontSize: 20, color: Colors.black87),

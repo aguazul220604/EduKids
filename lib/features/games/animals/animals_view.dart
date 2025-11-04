@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../services/audio_service.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class AnimalsView extends StatefulWidget {
   const AnimalsView({super.key});
@@ -10,6 +12,7 @@ class AnimalsView extends StatefulWidget {
 }
 
 class _AnimalsViewState extends State<AnimalsView> {
+  String? _userName;
   final List<Map<String, String>> animals = [
     {
       "name": "Perro",
@@ -36,142 +39,189 @@ class _AnimalsViewState extends State<AnimalsView> {
   int currentIndex = 0;
   Set<int> validatedIndexes = {};
   String? correctAnswer;
+  bool isAudioPlayed = false;
+  bool isButtonDisabled = false;
 
-  void _playCurrentSound() async {
-    final currentAnimal = animals[currentIndex];
-    await AudioService.playSound(currentAnimal["sound"]!);
+  @override
+  void initState() {
+    super.initState();
+    _loadUserName();
+  }
+
+  Future<void> _loadUserName() async {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) return;
+
+    final doc = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(uid)
+        .get();
     setState(() {
-      correctAnswer = currentAnimal["name"];
+      _userName = doc.data()?['name'] ?? 'Jugador';
     });
   }
 
-  void _onAnimalTap(int index) {
+  void _playCurrentSound() async {
+    if (isButtonDisabled) return;
+    setState(() => isButtonDisabled = true);
+
+    await AudioService.stopSound();
+
+    final currentAnimal = animals[currentIndex];
+    await AudioService.playSound(currentAnimal["sound"]!);
+
+    setState(() {
+      correctAnswer = currentAnimal["name"];
+      isAudioPlayed = true;
+      isButtonDisabled = false;
+    });
+  }
+
+  void _onAnimalTap(int index) async {
+    if (isButtonDisabled) return;
+
+    if (!isAudioPlayed) {
+      _showMessageDialog(
+        title: "Escuchemos",
+        message: "Debes presionar el botón 🔊 antes de elegir un animalito",
+        color: Colors.orange,
+      );
+      return;
+    }
+
     if (animals[index]["name"] == correctAnswer) {
+      setState(() => isButtonDisabled = true);
+      await AudioService.stopSound();
+
       validatedIndexes.add(index);
 
-      if (validatedIndexes.length == animals.length) {
-        Future.delayed(const Duration(milliseconds: 500), () {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(
-              builder: (context) => const CongratulationsScreen(),
-            ),
-          );
-        });
-      } else {
-        int nextIndex = (currentIndex + 1) % animals.length;
-        while (validatedIndexes.contains(nextIndex)) {
-          nextIndex = (nextIndex + 1) % animals.length;
-        }
-
-        setState(() {
-          currentIndex = nextIndex;
-          correctAnswer = null;
-        });
-      }
+      _showMessageDialog(
+        title: "¡Correcto!",
+        message: "¡Has seleccionado el animalito correcto!",
+        color: Colors.green,
+        onClose: () {
+          if (validatedIndexes.length == animals.length) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                builder: (context) =>
+                    CongratulationsScreen(userName: _userName ?? 'Jugador'),
+              ),
+            );
+          } else {
+            int nextIndex = (currentIndex + 1) % animals.length;
+            while (validatedIndexes.contains(nextIndex)) {
+              nextIndex = (nextIndex + 1) % animals.length;
+            }
+            setState(() {
+              currentIndex = nextIndex;
+              correctAnswer = null;
+              isAudioPlayed = false;
+              isButtonDisabled = false;
+            });
+          }
+        },
+      );
     } else {
-      _showErrorDialog();
+      _showMessageDialog(
+        title: "¡Ups!",
+        message: "Ese no es el animalito correcto\n¡Intenta de nuevo!",
+        color: Colors.red,
+      );
     }
   }
 
-  void _showErrorDialog() {
+  void _showMessageDialog({
+    required String title,
+    required String message,
+    required Color color,
+    VoidCallback? onClose,
+  }) {
     showDialog(
       context: context,
-      builder: (BuildContext context) {
-        return Dialog(
-          backgroundColor: Colors.transparent,
-          child: Container(
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(25),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.3),
-                  blurRadius: 15,
-                  offset: const Offset(0, 5),
+      builder: (context) => Dialog(
+        backgroundColor: Colors.transparent,
+        child: Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(25),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.3),
+                blurRadius: 15,
+                offset: const Offset(0, 5),
+              ),
+            ],
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(25),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 80,
+                  height: 80,
+                  decoration: BoxDecoration(
+                    color: color.withOpacity(0.2),
+                    shape: BoxShape.circle,
+                    border: Border.all(color: color, width: 3),
+                  ),
+                  child: Icon(
+                    title == "¡Correcto!"
+                        ? Icons.check_rounded
+                        : Icons.close_rounded,
+                    size: 40,
+                    color: color,
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Text(
+                  title,
+                  style: GoogleFonts.fredoka(
+                    fontSize: 28,
+                    fontWeight: FontWeight.bold,
+                    color: color,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  message,
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.fredoka(
+                    fontSize: 18,
+                    color: Colors.grey[700],
+                  ),
+                ),
+                const SizedBox(height: 25),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: color,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 30,
+                      vertical: 12,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(15),
+                    ),
+                  ),
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                    if (onClose != null) onClose();
+                  },
+                  child: Text(
+                    "ENTENDIDO",
+                    style: GoogleFonts.fredoka(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
                 ),
               ],
             ),
-            child: Padding(
-              padding: const EdgeInsets.all(25),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // Icono animado
-                  Container(
-                    width: 80,
-                    height: 80,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFFFE6E6),
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: const Color(0xFFFF6B6B),
-                        width: 3,
-                      ),
-                    ),
-                    child: const Icon(
-                      Icons.close_rounded,
-                      size: 40,
-                      color: Color(0xFFFF6B6B),
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-
-                  // Título
-                  Text(
-                    "¡Ups!",
-                    style: GoogleFonts.fredoka(
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                      color: const Color(0xFFFF6B6B),
-                    ),
-                  ),
-
-                  const SizedBox(height: 10),
-
-                  // Mensaje
-                  Text(
-                    "Ese no es el animal correcto.\n¡Intenta de nuevo!",
-                    textAlign: TextAlign.center,
-                    style: GoogleFonts.fredoka(
-                      fontSize: 18,
-                      color: Colors.grey[700],
-                    ),
-                  ),
-
-                  const SizedBox(height: 25),
-
-                  // Botón de aceptar
-                  ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFFFF6B6B),
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 30,
-                        vertical: 12,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(15),
-                      ),
-                      elevation: 3,
-                    ),
-                    onPressed: () {
-                      Navigator.of(context).pop();
-                    },
-                    child: Text(
-                      "ENTENDIDO",
-                      style: GoogleFonts.fredoka(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
           ),
-        );
-      },
+        ),
+      ),
     );
   }
 
@@ -204,12 +254,12 @@ class _AnimalsViewState extends State<AnimalsView> {
               style: GoogleFonts.fredoka(fontSize: 20, color: Colors.white),
             ),
           ),
-          const SizedBox(height: 30),
+          const SizedBox(height: 90),
           Expanded(
             child: GridView.builder(
               padding: const EdgeInsets.all(20),
               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2, // 2 columnas
+                crossAxisCount: 2,
                 crossAxisSpacing: 20,
                 mainAxisSpacing: 20,
               ),
@@ -259,7 +309,9 @@ class _AnimalsViewState extends State<AnimalsView> {
 }
 
 class CongratulationsScreen extends StatelessWidget {
-  const CongratulationsScreen({super.key});
+  final String userName;
+
+  const CongratulationsScreen({super.key, required this.userName});
 
   @override
   Widget build(BuildContext context) {
@@ -273,12 +325,26 @@ class CongratulationsScreen extends StatelessWidget {
             const SizedBox(height: 30),
             Text(
               "¡Felicidades!",
-              style: GoogleFonts.fredoka(fontSize: 36, color: Colors.white),
+              style: GoogleFonts.fredoka(
+                fontSize: 38,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
             ),
             const SizedBox(height: 10),
             Text(
-              "Completaste el juego",
+              "$userName",
+              style: GoogleFonts.fredoka(
+                fontSize: 26,
+                color: Colors.orange.shade800,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 10),
+            Text(
+              "¡Completaste el juego de los animalitos!",
               style: GoogleFonts.fredoka(fontSize: 20, color: Colors.black87),
+              textAlign: TextAlign.center,
             ),
             const SizedBox(height: 40),
             ElevatedButton(

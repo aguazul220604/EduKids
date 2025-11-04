@@ -1,3 +1,4 @@
+import 'package:edukids/main.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -51,7 +52,7 @@ class _MenuViewState extends State<MenuView> {
               const SizedBox(height: 8),
               if (_userName != null)
                 Text(
-                  'Hola, $_userName 👋',
+                  'Hola, $_userName',
                   style: GoogleFonts.fredoka(
                     fontSize: 22,
                     color: Colors.orange.shade800,
@@ -104,10 +105,13 @@ class _MenuViewState extends State<MenuView> {
               ElevatedButton.icon(
                 onPressed: () async {
                   await FirebaseAuth.instance.signOut();
-                  Navigator.pushReplacementNamed(
+                  Navigator.pushAndRemoveUntil(
                     context,
-                    '/login',
-                  ); // o RootView
+                    MaterialPageRoute(
+                      builder: (context) => const WelcomeScreen(),
+                    ),
+                    (Route<dynamic> route) => false,
+                  );
                 },
                 icon: const Icon(Icons.logout),
                 label: const Text('Cerrar sesión'),
