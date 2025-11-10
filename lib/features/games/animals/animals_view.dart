@@ -13,6 +13,7 @@ class AnimalsView extends StatefulWidget {
 
 class _AnimalsViewState extends State<AnimalsView> {
   String? _userName;
+
   final List<Map<String, String>> animals = [
     {
       "name": "Perro",
@@ -39,8 +40,8 @@ class _AnimalsViewState extends State<AnimalsView> {
   int currentIndex = 0;
   Set<int> validatedIndexes = {};
   String? correctAnswer;
-  bool isAudioPlayed = false;
   bool isButtonDisabled = false;
+  bool isAudioPlaying = false;
 
   @override
   void initState() {
@@ -61,46 +62,55 @@ class _AnimalsViewState extends State<AnimalsView> {
     });
   }
 
-  void _playCurrentSound() async {
+  /// --- Reproduce el audio actual y bloquea el botón ---
+  Future<void> _playCurrentSound() async {
     if (isButtonDisabled) return;
-    setState(() => isButtonDisabled = true);
 
+    setState(() => isButtonDisabled = true);
     await AudioService.stopSound();
 
     final currentAnimal = animals[currentIndex];
-    await AudioService.playSound(currentAnimal["sound"]!);
+    correctAnswer = currentAnimal["name"];
 
-    setState(() {
-      correctAnswer = currentAnimal["name"];
-      isAudioPlayed = true;
-      isButtonDisabled = false;
-    });
+    await AudioService.playSound(currentAnimal["sound"]!);
+    setState(() => isAudioPlaying = true);
   }
 
+  /// --- Lógica cuando el jugador toca un animal ---
   void _onAnimalTap(int index) async {
-    if (isButtonDisabled) return;
+    // Si el animal ya fue validado, no hacer nada
+    if (validatedIndexes.contains(index) || !isAudioPlaying) return;
 
-    if (!isAudioPlayed) {
-      _showMessageDialog(
-        title: "Escuchemos",
-        message: "Debes presionar el botón 🔊 antes de elegir un animalito",
-        color: Colors.orange,
-      );
-      return;
-    }
+    final selectedAnimal = animals[index]["name"];
 
-    if (animals[index]["name"] == correctAnswer) {
-      setState(() => isButtonDisabled = true);
+    if (selectedAnimal == correctAnswer) {
+      // ✅ Correcto
       await AudioService.stopSound();
 
-      validatedIndexes.add(index);
+      setState(() {
+        validatedIndexes.add(index);
+        isAudioPlaying = false;
+        isButtonDisabled = true;
+      });
 
       _showMessageDialog(
         title: "¡Correcto!",
-        message: "¡Has seleccionado el animalito correcto!",
+        message: "¡Muy bien! Era el ${selectedAnimal!.toLowerCase()} 🐾",
         color: Colors.green,
-        onClose: () {
-          if (validatedIndexes.length == animals.length) {
+        onClose: () async {
+          // Espera 2 segundos después de presionar "ENTENDIDO"
+          await Future.delayed(const Duration(seconds: 2));
+
+          // Si aún quedan animales, avanza y reproduce el siguiente
+          if (currentIndex < animals.length - 1) {
+            setState(() {
+              currentIndex++;
+              isButtonDisabled = false;
+            });
+            _playCurrentSound();
+          } else {
+            // 🎯 Ir directamente a la pantalla de felicitación
+            if (!mounted) return;
             Navigator.pushReplacement(
               context,
               MaterialPageRoute(
@@ -108,29 +118,20 @@ class _AnimalsViewState extends State<AnimalsView> {
                     CongratulationsScreen(userName: _userName ?? 'Jugador'),
               ),
             );
-          } else {
-            int nextIndex = (currentIndex + 1) % animals.length;
-            while (validatedIndexes.contains(nextIndex)) {
-              nextIndex = (nextIndex + 1) % animals.length;
-            }
-            setState(() {
-              currentIndex = nextIndex;
-              correctAnswer = null;
-              isAudioPlayed = false;
-              isButtonDisabled = false;
-            });
           }
         },
       );
     } else {
+      // ❌ Incorrecto
       _showMessageDialog(
         title: "¡Ups!",
-        message: "Ese no es el animalito correcto\n¡Intenta de nuevo!",
+        message: "Ese no es el animalito correcto.\n¡Intenta de nuevo!",
         color: Colors.red,
       );
     }
   }
 
+  /// --- Muestra diálogos de acierto/error ---
   void _showMessageDialog({
     required String title,
     required String message,
@@ -139,6 +140,7 @@ class _AnimalsViewState extends State<AnimalsView> {
   }) {
     showDialog(
       context: context,
+      barrierDismissible: false,
       builder: (context) => Dialog(
         backgroundColor: Colors.transparent,
         child: Container(
@@ -242,13 +244,13 @@ class _AnimalsViewState extends State<AnimalsView> {
           const SizedBox(height: 30),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.orange,
+              backgroundColor: isButtonDisabled ? Colors.grey : Colors.orange,
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
               ),
             ),
-            onPressed: _playCurrentSound,
+            onPressed: isButtonDisabled ? null : _playCurrentSound,
             child: Text(
               "🔊 Escuchemos",
               style: GoogleFonts.fredoka(fontSize: 20, color: Colors.white),
@@ -266,10 +268,12 @@ class _AnimalsViewState extends State<AnimalsView> {
               itemCount: animals.length,
               itemBuilder: (context, index) {
                 final animal = animals[index];
+                final isValidated = validatedIndexes.contains(index);
+
                 return GestureDetector(
                   onTap: () => _onAnimalTap(index),
                   child: Opacity(
-                    opacity: validatedIndexes.contains(index) ? 0.4 : 1.0,
+                    opacity: isValidated ? 0.4 : 1.0,
                     child: Container(
                       decoration: BoxDecoration(
                         color: Colors.white,
@@ -333,7 +337,7 @@ class CongratulationsScreen extends StatelessWidget {
             ),
             const SizedBox(height: 10),
             Text(
-              "$userName",
+              userName,
               style: GoogleFonts.fredoka(
                 fontSize: 26,
                 color: Colors.orange.shade800,
@@ -342,7 +346,7 @@ class CongratulationsScreen extends StatelessWidget {
             ),
             const SizedBox(height: 10),
             Text(
-              "¡Completaste el juego de los animalitos!",
+              "¡Completaste el juego!",
               style: GoogleFonts.fredoka(fontSize: 20, color: Colors.black87),
               textAlign: TextAlign.center,
             ),

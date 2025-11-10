@@ -287,7 +287,7 @@ class CongratulationsScreen extends StatelessWidget {
               ),
             ),
             Text(
-              "Completaste el juego",
+              "¡Completaste el juego!",
               style: GoogleFonts.fredoka(fontSize: 20, color: Colors.black87),
             ),
             const SizedBox(height: 40),

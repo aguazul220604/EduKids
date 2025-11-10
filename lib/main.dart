@@ -73,12 +73,12 @@ class WelcomeScreen extends StatelessWidget {
 
                 // Título principal
                 const Text(
-                  '¡Bienvenido a EduKids!',
+                  'EduKids',
                   style: TextStyle(
-                    fontSize: 32,
+                    fontSize: 60,
                     fontWeight: FontWeight.bold,
                     fontFamily: 'ComicNeue',
-                    color: Color(0xFF6A1B9A),
+                    color: Color.fromARGB(255, 141, 10, 255),
                     shadows: [
                       Shadow(
                         blurRadius: 8,
@@ -98,12 +98,8 @@ class WelcomeScreen extends StatelessWidget {
                   child: _GradientButton(
                     onPressed: () => Navigator.pushNamed(context, '/login'),
                     text: 'Iniciar sesión',
-                    colors: const [
-                      Color(0xFFFF8C42), // Naranja brillante
-                      Color(0xFFFFB347),
-                      Color(0xFFFF8C42),
-                    ],
-                    icon: Icons.login,
+                    colors: const [Color(0xFFFF8C42), Color(0xFFFF8C42)],
+                    icon: Icons.person_2_rounded,
                   ),
                 ),
                 const SizedBox(height: 20),
@@ -114,19 +110,32 @@ class WelcomeScreen extends StatelessWidget {
                   child: _GradientButton(
                     onPressed: () => Navigator.pushNamed(context, '/signup'),
                     text: 'Registrarse',
-                    colors: const [
-                      Color(0xFF4CAF50), // Verde alegre
-                      Color(0xFF81C784),
-                      Color(0xFF4CAF50),
-                    ],
+                    colors: const [Color(0xFF4CAF50), Color(0xFF4CAF50)],
                     icon: Icons.person_add,
                   ),
                 ),
 
-                const SizedBox(height: 40),
+                const SizedBox(height: 50),
 
-                // Frase motivadora
-                const _AnimatedText(),
+                const Text(
+                  '¡La aventura de aprender comienza ahora!',
+                  style: TextStyle(
+                    fontSize: 30,
+                    fontWeight: FontWeight.bold,
+                    fontFamily: 'ComicNeue',
+                    color: Color.fromARGB(255, 141, 10, 255),
+                    shadows: [
+                      Shadow(
+                        blurRadius: 8,
+                        color: Colors.black26,
+                        offset: Offset(2, 2),
+                      ),
+                    ],
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+
+                const SizedBox(height: 50),
               ],
             ),
           ),
@@ -136,7 +145,6 @@ class WelcomeScreen extends StatelessWidget {
   }
 }
 
-// 🌈 Botón con gradiente (igual tamaño)
 class _GradientButton extends StatelessWidget {
   final VoidCallback onPressed;
   final String text;
@@ -193,72 +201,6 @@ class _GradientButton extends StatelessWidget {
           ],
         ),
       ),
-    );
-  }
-}
-
-// 🌟 Texto animado final
-class _AnimatedText extends StatefulWidget {
-  const _AnimatedText();
-
-  @override
-  State<_AnimatedText> createState() => _AnimatedTextState();
-}
-
-class _AnimatedTextState extends State<_AnimatedText>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      duration: const Duration(seconds: 4),
-      vsync: this,
-    )..repeat(reverse: true);
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _controller,
-      builder: (context, _) {
-        return ShaderMask(
-          shaderCallback: (bounds) => LinearGradient(
-            colors: [
-              const Color(0xFFFFA726),
-              const Color(0xFFFF6B6B),
-              const Color(0xFF4CAF50),
-            ],
-            transform: GradientRotation(
-              _controller.value * 6.28319,
-            ), // 2π animación
-          ).createShader(bounds),
-          child: const Text(
-            '¡La aventura de aprender comienza ahora!',
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              fontFamily: 'ComicNeue',
-              color: Colors.white,
-              shadows: [
-                Shadow(
-                  blurRadius: 10,
-                  color: Colors.black38,
-                  offset: Offset(2, 2),
-                ),
-              ],
-            ),
-            textAlign: TextAlign.center,
-          ),
-        );
-      },
     );
   }
 }
