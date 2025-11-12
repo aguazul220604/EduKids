@@ -26,61 +26,61 @@ class _NumbersViewState extends State<NumbersView>
     {
       "number": "1",
       "word": "Uno",
-      "image": "assets/images/numbers/num_1.png",
+      "image": "assets/images/numbers/1.png",
       "sound": "sounds/numbers/1.mp3",
     },
     {
       "number": "2",
       "word": "Dos",
-      "image": "assets/images/numbers/num_2.png",
+      "image": "assets/images/numbers/2.png",
       "sound": "sounds/numbers/2.mp3",
     },
     {
       "number": "3",
       "word": "Tres",
-      "image": "assets/images/numbers/num_3.png",
+      "image": "assets/images/numbers/3.png",
       "sound": "sounds/numbers/3.mp3",
     },
     {
       "number": "4",
       "word": "Cuatro",
-      "image": "assets/images/numbers/num_4.png",
+      "image": "assets/images/numbers/4.png",
       "sound": "sounds/numbers/4.mp3",
     },
     {
       "number": "5",
       "word": "Cinco",
-      "image": "assets/images/numbers/num_5.png",
+      "image": "assets/images/numbers/5.png",
       "sound": "sounds/numbers/5.mp3",
     },
     {
       "number": "6",
       "word": "Seis",
-      "image": "assets/images/numbers/num_6.png",
+      "image": "assets/images/numbers/6.png",
       "sound": "sounds/numbers/6.mp3",
     },
     {
       "number": "7",
       "word": "Siete",
-      "image": "assets/images/numbers/num_7.png",
+      "image": "assets/images/numbers/7.png",
       "sound": "sounds/numbers/7.mp3",
     },
     {
       "number": "8",
       "word": "Ocho",
-      "image": "assets/images/numbers/num_8.jpg",
+      "image": "assets/images/numbers/8.png",
       "sound": "sounds/numbers/8.mp3",
     },
     {
       "number": "9",
       "word": "Nueve",
-      "image": "assets/images/numbers/num_9.jpg",
+      "image": "assets/images/numbers/9.png",
       "sound": "sounds/numbers/9.mp3",
     },
     {
       "number": "10",
       "word": "Diez",
-      "image": "assets/images/numbers/num_10.jpg",
+      "image": "assets/images/numbers/10.png",
       "sound": "sounds/numbers/10.mp3",
     },
   ];
@@ -192,8 +192,8 @@ class _NumbersViewState extends State<NumbersView>
                 ),
                 // Aquí la clave: usamos constraints flexibles
                 constraints: const BoxConstraints(
-                  maxWidth: 320, // puedes ajustar según tu diseño
-                  maxHeight: 320,
+                  maxWidth: 307, // puedes ajustar según tu diseño
+                  maxHeight: 512,
                 ),
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(24),

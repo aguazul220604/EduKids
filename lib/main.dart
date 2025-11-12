@@ -28,8 +28,8 @@ class EduKidsApp extends StatelessWidget {
       theme: ThemeData(primarySwatch: Colors.yellow, fontFamily: 'ComicNeue'),
       home: const WelcomeScreen(),
       routes: {
-        '/login': (context) => const LoginView(),
-        '/signup': (context) => const SignupView(),
+        '/login': (context) => const LoginPage(),
+        '/signup': (context) => const SignUpPage(),
         AppRoutes.menu: (context) => const MenuView(),
         AppRoutes.animals: (context) => const AnimalsView(),
         AppRoutes.colors: (context) => const ColorsView(),
@@ -72,23 +72,7 @@ class WelcomeScreen extends StatelessWidget {
                 const SizedBox(height: 20),
 
                 // Título principal
-                const Text(
-                  'EduKids',
-                  style: TextStyle(
-                    fontSize: 60,
-                    fontWeight: FontWeight.bold,
-                    fontFamily: 'ComicNeue',
-                    color: Color.fromARGB(255, 141, 10, 255),
-                    shadows: [
-                      Shadow(
-                        blurRadius: 8,
-                        color: Colors.black26,
-                        offset: Offset(2, 2),
-                      ),
-                    ],
-                  ),
-                  textAlign: TextAlign.center,
-                ),
+                Image.asset('assets/images/title.png', height: 140),
 
                 const SizedBox(height: 50),
 

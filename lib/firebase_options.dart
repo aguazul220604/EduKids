@@ -66,5 +66,4 @@ class DefaultFirebaseOptions {
     projectId: 'edukids-b80bc',
     storageBucket: 'edukids-b80bc.firebasestorage.app',
   );
-
 }

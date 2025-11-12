@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../core/constants/app_routes.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 
 class MenuView extends StatefulWidget {
   const MenuView({super.key});
@@ -104,14 +105,36 @@ class _MenuViewState extends State<MenuView> {
               const SizedBox(height: 32),
               ElevatedButton.icon(
                 onPressed: () async {
-                  await FirebaseAuth.instance.signOut();
-                  Navigator.pushAndRemoveUntil(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const WelcomeScreen(),
-                    ),
-                    (Route<dynamic> route) => false,
-                  );
+                  try {
+                    // Cierra sesión en Firebase (siempre)
+                    await FirebaseAuth.instance.signOut();
+
+                    // Intenta cerrar sesión en Google (si aplica)
+                    final GoogleSignIn googleSignIn = GoogleSignIn();
+                    final isSignedIn = await googleSignIn.isSignedIn();
+                    if (isSignedIn) {
+                      try {
+                        await googleSignIn.signOut();
+                        await googleSignIn.disconnect();
+                      } catch (_) {
+                        // Ignoramos errores menores del plugin
+                      }
+                    }
+
+                    // Redirige al usuario a la pantalla de bienvenida
+                    if (context.mounted) {
+                      Navigator.pushAndRemoveUntil(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const WelcomeScreen(),
+                        ),
+                        (Route<dynamic> route) => false,
+                      );
+                    }
+                  } catch (e) {
+                    // Solo log interno (sin mostrar SnackBar)
+                    print('⚠️ Error cerrando sesión (ignorado): $e');
+                  }
                 },
                 icon: const Icon(Icons.logout),
                 label: const Text('Cerrar sesión'),

@@ -12,7 +12,20 @@
           "package_name": "com.example.edukids"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "161411622579-8e292tdru2j0qthh28aa5a3v3bs3h9ik.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.edukids",
+            "certificate_hash": "b9a945f527939976d920738be7892842778a1e00"
+          }
+        },
+        {
+          "client_id": "161411622579-rpt1rbf7kinsrcqgqqtg4vj5vgpngfc3.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyBFVcDPCNbYHkgnetaCMz0F01oNmPAKeco"
@@ -20,7 +33,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "161411622579-rpt1rbf7kinsrcqgqqtg4vj5vgpngfc3.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }

@@ -1,39 +1,29 @@
-// lib/features/auth/presentation/signup_view.dart
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import '../../auth/data/auth_service.dart';
+import 'package:email_validator/email_validator.dart';
 import '../../menu/menu_view.dart';
-import 'login_view.dart';
+import '../../auth/data/auth_service.dart';
 
-class SignupView extends StatefulWidget {
-  const SignupView({super.key});
+class SignUpPage extends StatefulWidget {
+  const SignUpPage({super.key});
 
   @override
-  State<SignupView> createState() => _SignupViewState();
+  State<SignUpPage> createState() => _SignUpPageState();
 }
 
-class _SignupViewState extends State<SignupView> {
+class _SignUpPageState extends State<SignUpPage> {
+  final AuthService _authService = AuthService();
   final _formKey = GlobalKey<FormState>();
-  final _authService = AuthService();
-
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
 
-  bool _loading = false;
+  bool _isLoading = false;
   bool _obscurePassword = true;
-  bool _success = false;
-  String? _errorMessage;
 
   Future<void> _register() async {
     if (!_formKey.currentState!.validate()) return;
 
-    setState(() {
-      _loading = true;
-      _errorMessage = null;
-      _success = false;
-    });
-
+    setState(() => _isLoading = true);
     try {
       final user = await _authService.registerUser(
         _nameController.text.trim(),
@@ -41,59 +31,48 @@ class _SignupViewState extends State<SignupView> {
         _passwordController.text.trim(),
       );
 
-      if (user != null && mounted) {
-        // Mostrar éxito antes de navegar
-        setState(() {
-          _success = true;
-          _loading = false;
-        });
-
-        // Pequeño delay para que el usuario vea el mensaje de éxito
-        await Future.delayed(const Duration(milliseconds: 1500));
-
-        if (mounted) {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (_) => const MenuView()),
-          );
+      if (user != null) {
+        if (!user.emailVerified) {
+          await user.sendEmailVerification();
         }
-      } else {
-        setState(() {
-          _errorMessage = 'Error al crear la cuenta. Intenta nuevamente.';
-          _loading = false;
-        });
+        if (!mounted) return;
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const MenuView()),
+        );
       }
-    } on FirebaseAuthException catch (e) {
-      String errorMessage = 'Error al crear la cuenta';
-
-      // Mensajes más específicos según el error
-      switch (e.code) {
-        case 'email-already-in-use':
-          errorMessage = 'Este correo ya está registrado';
-          break;
-        case 'weak-password':
-          errorMessage = 'La contraseña es muy débil';
-          break;
-        case 'invalid-email':
-          errorMessage = 'El correo electrónico no es válido';
-          break;
-        case 'operation-not-allowed':
-          errorMessage = 'Operación no permitida';
-          break;
-        default:
-          errorMessage = e.message ?? 'Error desconocido';
-      }
-
-      setState(() {
-        _errorMessage = errorMessage;
-        _loading = false;
-      });
     } catch (e) {
-      setState(() {
-        _errorMessage = 'Error inesperado: $e';
-        _loading = false;
-      });
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error al registrarse: $e')));
+    } finally {
+      setState(() => _isLoading = false);
     }
+  }
+
+  Future<void> _registerWithGoogle() async {
+    setState(() => _isLoading = true);
+    try {
+      final user = await _authService.signInWithGoogle();
+      if (user != null && mounted) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const MenuView()),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error con Google: $e')));
+    } finally {
+      setState(() => _isLoading = false);
+    }
+  }
+
+  void _clearFields() {
+    _nameController.clear();
+    _emailController.clear();
+    _passwordController.clear();
   }
 
   @override
@@ -102,437 +81,198 @@ class _SignupViewState extends State<SignupView> {
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [Color(0xFF667EEA), Color(0xFF764BA2)],
+            colors: [
+              Color(0xFF6A1B9A), // Morado
+              Color(0xFF283593), // Azul
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
           ),
         ),
         child: Center(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              children: [
-                // Logo y título
-                Container(
-                  width: 100,
-                  height: 100,
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.9),
-                    borderRadius: BorderRadius.circular(25),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.1),
-                        blurRadius: 15,
-                        offset: const Offset(0, 5),
+            padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 40),
+            child: Card(
+              color: Colors.white.withOpacity(0.9),
+              elevation: 10,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(24),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(30),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Image.asset(
+                        'assets/images/edukids_logo.png',
+                        height: 100,
                       ),
-                    ],
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(20),
-                    child: Image.asset(
-                      'assets/images/edukids_logo.png',
-                      fit: BoxFit.contain,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 20),
-                const Text(
-                  'Crear cuenta',
-                  style: TextStyle(
-                    fontSize: 28,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                    fontFamily: 'ComicNeue',
-                  ),
-                ),
-                const SizedBox(height: 8),
-                const Text(
-                  'Únete a la aventura de aprender',
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Colors.white70,
-                    fontFamily: 'ComicNeue',
-                  ),
-                ),
-                const SizedBox(height: 40),
-
-                // Formulario
-                Container(
-                  padding: const EdgeInsets.all(30),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.95),
-                    borderRadius: BorderRadius.circular(20),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.1),
-                        blurRadius: 20,
-                        offset: const Offset(0, 10),
+                      const SizedBox(height: 10),
+                      Image.asset('assets/images/title.png', height: 40),
+                      const SizedBox(height: 20),
+                      const Text(
+                        "Crear cuenta",
+                        style: TextStyle(
+                          fontSize: 26,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF4A148C),
+                        ),
                       ),
-                    ],
-                  ),
-                  child: Form(
-                    key: _formKey,
-                    child: Column(
-                      children: [
-                        // Mensaje de éxito
-                        if (_success)
-                          Container(
-                            width: double.infinity,
-                            padding: const EdgeInsets.all(16),
-                            decoration: BoxDecoration(
-                              color: Colors.green[50],
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(
-                                color: Colors.green[100]!,
-                                width: 1,
-                              ),
-                            ),
-                            child: Row(
-                              children: [
-                                const Icon(
-                                  Icons.check_circle,
-                                  color: Colors.green,
-                                  size: 24,
-                                ),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      const Text(
-                                        '¡Cuenta creada exitosamente!',
-                                        style: TextStyle(
-                                          color: Colors.green,
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.w600,
-                                          fontFamily: 'ComicNeue',
-                                        ),
-                                      ),
-                                      Text(
-                                        'Bienvenido/a ${_nameController.text}',
-                                        style: const TextStyle(
-                                          color: Colors.green,
-                                          fontSize: 14,
-                                          fontFamily: 'ComicNeue',
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                const SizedBox(
-                                  width: 20,
-                                  height: 20,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    valueColor: AlwaysStoppedAnimation<Color>(
-                                      Colors.green,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        if (_success) const SizedBox(height: 20),
+                      const SizedBox(height: 25),
 
-                        // Campo de nombre
-                        TextFormField(
-                          controller: _nameController,
-                          enabled: !_loading && !_success,
-                          decoration: InputDecoration(
-                            labelText: 'Nombre completo',
-                            labelStyle: TextStyle(
-                              color: _loading || _success
-                                  ? Colors.grey
-                                  : const Color(0xFF764BA2),
-                              fontFamily: 'ComicNeue',
-                            ),
-                            prefixIcon: Icon(
-                              Icons.person_outline,
-                              color: _loading || _success
-                                  ? Colors.grey
-                                  : const Color(0xFF764BA2),
-                            ),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide.none,
-                            ),
-                            filled: true,
-                            fillColor: _loading || _success
-                                ? Colors.grey[100]
-                                : Colors.grey[50],
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 16,
-                            ),
-                          ),
-                          style: const TextStyle(
-                            fontFamily: 'ComicNeue',
-                            fontSize: 16,
-                          ),
-                          validator: (v) => v == null || v.isEmpty
-                              ? 'Por favor ingresa tu nombre'
-                              : null,
-                        ),
-                        const SizedBox(height: 20),
-
-                        // Campo de email
-                        TextFormField(
-                          controller: _emailController,
-                          enabled: !_loading && !_success,
-                          decoration: InputDecoration(
-                            labelText: 'Correo electrónico',
-                            labelStyle: TextStyle(
-                              color: _loading || _success
-                                  ? Colors.grey
-                                  : const Color(0xFF764BA2),
-                              fontFamily: 'ComicNeue',
-                            ),
-                            prefixIcon: Icon(
-                              Icons.email_outlined,
-                              color: _loading || _success
-                                  ? Colors.grey
-                                  : const Color(0xFF764BA2),
-                            ),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide.none,
-                            ),
-                            filled: true,
-                            fillColor: _loading || _success
-                                ? Colors.grey[100]
-                                : Colors.grey[50],
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 16,
-                            ),
-                          ),
-                          style: const TextStyle(
-                            fontFamily: 'ComicNeue',
-                            fontSize: 16,
-                          ),
-                          validator: (v) => v == null || !v.contains('@')
-                              ? 'Por favor ingresa un correo válido'
-                              : null,
-                        ),
-                        const SizedBox(height: 20),
-
-                        // Campo de contraseña
-                        TextFormField(
-                          controller: _passwordController,
-                          enabled: !_loading && !_success,
-                          obscureText: _obscurePassword,
-                          decoration: InputDecoration(
-                            labelText: 'Contraseña',
-                            labelStyle: TextStyle(
-                              color: _loading || _success
-                                  ? Colors.grey
-                                  : const Color(0xFF764BA2),
-                              fontFamily: 'ComicNeue',
-                            ),
-                            prefixIcon: Icon(
-                              Icons.lock_outline,
-                              color: _loading || _success
-                                  ? Colors.grey
-                                  : const Color(0xFF764BA2),
-                            ),
-                            suffixIcon: _loading || _success
-                                ? null
-                                : IconButton(
-                                    icon: Icon(
-                                      _obscurePassword
-                                          ? Icons.visibility_outlined
-                                          : Icons.visibility_off_outlined,
-                                      color: const Color(0xFF764BA2),
-                                    ),
-                                    onPressed: () {
-                                      setState(() {
-                                        _obscurePassword = !_obscurePassword;
-                                      });
-                                    },
-                                  ),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide.none,
-                            ),
-                            filled: true,
-                            fillColor: _loading || _success
-                                ? Colors.grey[100]
-                                : Colors.grey[50],
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 16,
-                            ),
-                          ),
-                          style: const TextStyle(
-                            fontFamily: 'ComicNeue',
-                            fontSize: 16,
-                          ),
-                          validator: (v) => v != null && v.length < 6
-                              ? 'La contraseña debe tener al menos 6 caracteres'
-                              : null,
-                        ),
-                        const SizedBox(height: 25),
-
-                        // Mensaje de error
-                        if (_errorMessage != null)
-                          Container(
-                            width: double.infinity,
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color: Colors.red[50],
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(
-                                color: Colors.red[100]!,
-                                width: 1,
-                              ),
-                            ),
-                            child: Row(
-                              children: [
-                                const Icon(
-                                  Icons.error_outline,
-                                  color: Colors.red,
-                                  size: 20,
-                                ),
-                                const SizedBox(width: 8),
-                                Expanded(
-                                  child: Text(
-                                    _errorMessage!,
-                                    style: const TextStyle(
-                                      color: Colors.red,
-                                      fontSize: 14,
-                                      fontFamily: 'ComicNeue',
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        if (_errorMessage != null) const SizedBox(height: 20),
-
-                        // Botón de registrarse
-                        Container(
-                          width: double.infinity,
-                          height: 54,
-                          decoration: BoxDecoration(
-                            gradient: _loading || _success
-                                ? null
-                                : const LinearGradient(
-                                    colors: [
-                                      Color(0xFF667EEA),
-                                      Color(0xFF764BA2),
-                                    ],
-                                    begin: Alignment.centerLeft,
-                                    end: Alignment.centerRight,
-                                  ),
-                            color: _loading || _success
-                                ? Colors.grey[300]
-                                : null,
-                            borderRadius: BorderRadius.circular(12),
-                            boxShadow: _loading || _success
-                                ? null
-                                : [
-                                    BoxShadow(
-                                      color: const Color(
-                                        0xFF764BA2,
-                                      ).withOpacity(0.3),
-                                      blurRadius: 10,
-                                      offset: const Offset(0, 5),
-                                    ),
-                                  ],
-                          ),
-                          child: ElevatedButton(
-                            onPressed: _loading || _success ? null : _register,
-                            style: ElevatedButton.styleFrom(
-                              foregroundColor: _loading || _success
-                                  ? Colors.grey
-                                  : Colors.white,
-                              backgroundColor: Colors.transparent,
-                              shadowColor: Colors.transparent,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                            ),
-                            child: _loading
-                                ? const SizedBox(
-                                    width: 20,
-                                    height: 20,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                      valueColor: AlwaysStoppedAnimation<Color>(
-                                        Colors.white,
-                                      ),
-                                    ),
-                                  )
-                                : _success
-                                ? const Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Icon(Icons.check, size: 20),
-                                      SizedBox(width: 8),
-                                      Text(
-                                        'Redirigiendo...',
-                                        style: TextStyle(
-                                          fontSize: 18,
-                                          fontWeight: FontWeight.w600,
-                                          fontFamily: 'ComicNeue',
-                                        ),
-                                      ),
-                                    ],
-                                  )
-                                : const Text(
-                                    'Registrarse',
-                                    style: TextStyle(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.w600,
-                                      fontFamily: 'ComicNeue',
-                                    ),
-                                  ),
+                      // Nombre
+                      TextFormField(
+                        controller: _nameController,
+                        decoration: InputDecoration(
+                          labelText: "Nombre completo",
+                          prefixIcon: const Icon(Icons.person_outline),
+                          filled: true,
+                          fillColor: Colors.white,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(14),
+                            borderSide: BorderSide.none,
                           ),
                         ),
-                        const SizedBox(height: 20),
+                        validator: (v) => v == null || v.trim().isEmpty
+                            ? "Ingresa tu nombre"
+                            : null,
+                      ),
+                      const SizedBox(height: 16),
 
-                        // Enlace para iniciar sesión
-                        if (!_success)
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              const Text(
-                                '¿Ya tienes cuenta? ',
-                                style: TextStyle(
-                                  color: Colors.grey,
-                                  fontFamily: 'ComicNeue',
-                                ),
-                              ),
-                              GestureDetector(
-                                onTap: _loading
-                                    ? null
-                                    : () {
-                                        Navigator.pushReplacement(
-                                          context,
-                                          MaterialPageRoute(
-                                            builder: (_) => const LoginView(),
-                                          ),
-                                        );
-                                      },
-                                child: Text(
-                                  'Inicia sesión',
+                      // Correo
+                      TextFormField(
+                        controller: _emailController,
+                        keyboardType: TextInputType.emailAddress,
+                        decoration: InputDecoration(
+                          labelText: "Correo electrónico",
+                          prefixIcon: const Icon(Icons.email_outlined),
+                          filled: true,
+                          fillColor: Colors.white,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(14),
+                            borderSide: BorderSide.none,
+                          ),
+                        ),
+                        validator: (v) {
+                          if (v == null || v.trim().isEmpty) {
+                            return "Ingresa tu correo";
+                          } else if (!EmailValidator.validate(v.trim())) {
+                            return "Correo inválido";
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 16),
+
+                      // Contraseña
+                      TextFormField(
+                        controller: _passwordController,
+                        obscureText: _obscurePassword,
+                        decoration: InputDecoration(
+                          labelText: "Contraseña",
+                          prefixIcon: const Icon(Icons.lock_outline),
+                          filled: true,
+                          fillColor: Colors.white,
+                          suffixIcon: IconButton(
+                            icon: Icon(
+                              _obscurePassword
+                                  ? Icons.visibility_off
+                                  : Icons.visibility,
+                            ),
+                            onPressed: () => setState(
+                              () => _obscurePassword = !_obscurePassword,
+                            ),
+                          ),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(14),
+                            borderSide: BorderSide.none,
+                          ),
+                        ),
+                        validator: (v) {
+                          if (v == null || v.trim().isEmpty) {
+                            return "Ingresa una contraseña";
+                          } else if (v.trim().length < 6) {
+                            return "Mínimo 6 caracteres";
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 25),
+
+                      // Botón de registro
+                      SizedBox(
+                        width: double.infinity,
+                        height: 50,
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF6A1B9A),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(14),
+                            ),
+                            elevation: 5,
+                          ),
+                          onPressed: _isLoading ? null : _register,
+                          child: _isLoading
+                              ? const CircularProgressIndicator(
+                                  color: Colors.white,
+                                )
+                              : const Text(
+                                  "Registrarse",
                                   style: TextStyle(
-                                    color: _loading
-                                        ? Colors.grey
-                                        : const Color(0xFF764BA2),
-                                    fontWeight: FontWeight.w600,
-                                    fontFamily: 'ComicNeue',
+                                    fontSize: 18,
+                                    color: Colors.white,
                                   ),
                                 ),
-                              ),
-                            ],
+                        ),
+                      ),
+
+                      const SizedBox(height: 25),
+                      const Text(
+                        "O regístrate con:",
+                        style: TextStyle(color: Colors.black54),
+                      ),
+                      const SizedBox(height: 10),
+
+                      // Google
+                      SizedBox(
+                        width: double.infinity,
+                        height: 50,
+                        child: OutlinedButton.icon(
+                          icon: Image.asset('assets/google.png', height: 24),
+                          label: const Text(
+                            "Continuar con Google",
+                            style: TextStyle(
+                              fontSize: 16,
+                              color: Colors.black87,
+                            ),
                           ),
-                      ],
-                    ),
+                          style: OutlinedButton.styleFrom(
+                            backgroundColor: Colors.white,
+                            side: const BorderSide(color: Colors.grey),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(14),
+                            ),
+                          ),
+                          onPressed: _isLoading ? null : _registerWithGoogle,
+                        ),
+                      ),
+
+                      const SizedBox(height: 20),
+                      TextButton(
+                        onPressed: () {
+                          Navigator.pushReplacementNamed(context, '/login');
+                        },
+                        child: const Text(
+                          "¿Ya tienes una cuenta? Inicia sesión",
+                          style: TextStyle(color: Colors.black87),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-              ],
+              ),
             ),
           ),
         ),
