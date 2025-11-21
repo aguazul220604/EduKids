@@ -58,7 +58,7 @@ class AuthService {
     }
   }
 
-  /// 🔥 Inicio de sesión con Google (100% funcional)
+  /// Inicio de sesión con Google
   Future<User?> signInWithGoogle() async {
     try {
       // Abre el selector de cuenta Google
@@ -98,7 +98,7 @@ class AuthService {
 
       return user;
     } catch (e) {
-      print('❌ Error en signInWithGoogle: $e');
+      print('Error en signInWithGoogle: $e');
       rethrow;
     }
   }

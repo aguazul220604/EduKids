@@ -84,7 +84,7 @@ class _AnimalsViewState extends State<AnimalsView> {
     final selectedAnimal = animals[index]["name"];
 
     if (selectedAnimal == correctAnswer) {
-      // ✅ Correcto
+      //  Correcto
       await AudioService.stopSound();
 
       setState(() {
@@ -109,7 +109,7 @@ class _AnimalsViewState extends State<AnimalsView> {
             });
             _playCurrentSound();
           } else {
-            // 🎯 Ir directamente a la pantalla de felicitación
+            // Ir directamente a la pantalla de felicitación
             if (!mounted) return;
             Navigator.pushReplacement(
               context,
@@ -122,7 +122,7 @@ class _AnimalsViewState extends State<AnimalsView> {
         },
       );
     } else {
-      // ❌ Incorrecto
+      // Incorrecto
       _showMessageDialog(
         title: "¡Ups!",
         message: "Ese no es el animalito correcto.\n¡Intenta de nuevo!",

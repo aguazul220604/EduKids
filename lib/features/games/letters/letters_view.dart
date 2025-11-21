@@ -115,7 +115,7 @@ class _LettersViewState extends State<LettersView>
         children: [
           const SizedBox(height: 20),
 
-          // Letra grande animada
+          // Letra animada
           if (activeVowel.isNotEmpty)
             TweenAnimationBuilder<double>(
               tween: Tween<double>(begin: 0.0, end: 1.0),

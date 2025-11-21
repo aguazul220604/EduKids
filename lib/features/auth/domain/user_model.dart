@@ -14,7 +14,7 @@ class UserModel {
     required this.createdAt,
   });
 
-  /// 🔹 Crea un objeto desde un documento de Firestore
+  /// Crea un objeto desde un documento de Firestore
   factory UserModel.fromDocument(DocumentSnapshot doc) {
     final data = doc.data() as Map<String, dynamic>;
     return UserModel(
@@ -25,7 +25,7 @@ class UserModel {
     );
   }
 
-  /// 🔹 Crea un objeto desde un mapa (útil si usas APIs o JSON)
+  /// Crea un objeto desde un mapa
   factory UserModel.fromMap(Map<String, dynamic> map) {
     return UserModel(
       uid: map['uid'] ?? '',
@@ -35,7 +35,7 @@ class UserModel {
     );
   }
 
-  /// 🔹 Convierte el usuario a mapa (para guardarlo en Firestore)
+  /// Convierte el usuario a mapa (para guardarlo en Firestore)
   Map<String, dynamic> toMap() {
     return {'uid': uid, 'name': name, 'email': email, 'createdAt': createdAt};
   }

@@ -41,7 +41,6 @@ class EduKidsApp extends StatelessWidget {
   }
 }
 
-/// 🟡 SPLASH SCREEN (powered.png durante 2 segundos)
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
 
@@ -79,7 +78,6 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 }
 
-/// 🧡 PANTALLA PRINCIPAL
 class WelcomeScreen extends StatelessWidget {
   const WelcomeScreen({super.key});
 
@@ -100,7 +98,7 @@ class WelcomeScreen extends StatelessWidget {
               Image.asset('assets/images/title.png', height: 140),
               const SizedBox(height: 50),
 
-              // 🔸 Botón Iniciar sesión
+              // Botón Iniciar sesión
               SizedBox(
                 width: buttonWidth,
                 child: _OutlinedOrangeButton(
@@ -111,7 +109,7 @@ class WelcomeScreen extends StatelessWidget {
               ),
               const SizedBox(height: 20),
 
-              // 🔸 Botón Registrarse
+              // Botón Registrarse
               SizedBox(
                 width: buttonWidth,
                 child: _OutlinedOrangeButton(
@@ -122,7 +120,7 @@ class WelcomeScreen extends StatelessWidget {
               ),
               const SizedBox(height: 50),
 
-              // 🔸 Texto inferior
+              // Texto inferior
               Text(
                 '¡La aventura de aprender comienza ahora!',
                 style: GoogleFonts.fredoka(
@@ -140,7 +138,6 @@ class WelcomeScreen extends StatelessWidget {
   }
 }
 
-/// 🟠 BOTÓN CON BORDE NARANJA
 class _OutlinedOrangeButton extends StatelessWidget {
   final VoidCallback onPressed;
   final String text;
