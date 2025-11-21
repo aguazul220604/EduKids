@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'firebase_options.dart';
 
 import 'core/constants/app_routes.dart';
@@ -26,7 +27,7 @@ class EduKidsApp extends StatelessWidget {
       title: 'EduKids',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(primarySwatch: Colors.yellow, fontFamily: 'ComicNeue'),
-      home: const WelcomeScreen(),
+      home: const SplashScreen(),
       routes: {
         '/login': (context) => const LoginPage(),
         '/signup': (context) => const SignUpPage(),
@@ -40,6 +41,45 @@ class EduKidsApp extends StatelessWidget {
   }
 }
 
+/// 🟡 SPLASH SCREEN (powered.png durante 2 segundos)
+class SplashScreen extends StatefulWidget {
+  const SplashScreen({super.key});
+
+  @override
+  State<SplashScreen> createState() => _SplashScreenState();
+}
+
+class _SplashScreenState extends State<SplashScreen> {
+  @override
+  void initState() {
+    super.initState();
+    Future.delayed(const Duration(seconds: 2), () {
+      Navigator.of(context).pushReplacement(
+        PageRouteBuilder(
+          transitionDuration: const Duration(milliseconds: 800),
+          pageBuilder: (_, __, ___) => const WelcomeScreen(),
+          transitionsBuilder: (_, animation, __, child) {
+            final curve = CurvedAnimation(
+              parent: animation,
+              curve: Curves.easeInOut,
+            );
+            return FadeTransition(opacity: curve, child: child);
+          },
+        ),
+      );
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFFFFF176),
+      body: Center(child: Image.asset('assets/powered.png', width: 200)),
+    );
+  }
+}
+
+/// 🧡 PANTALLA PRINCIPAL
 class WelcomeScreen extends StatelessWidget {
   const WelcomeScreen({super.key});
 
@@ -48,80 +88,51 @@ class WelcomeScreen extends StatelessWidget {
     final double buttonWidth = MediaQuery.of(context).size.width * 0.7;
 
     return Scaffold(
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              Color(0xFFFFF59D), // Amarillo claro
-              Color(0xFFFFEB3B), // Amarillo vibrante
-              Color(0xFFFFD54F), // Dorado cálido
+      backgroundColor: const Color(0xFFFFF176),
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Image.asset('assets/images/edukids_logo.png', width: 150),
+              const SizedBox(height: 20),
+              Image.asset('assets/images/title.png', height: 140),
+              const SizedBox(height: 50),
+
+              // 🔸 Botón Iniciar sesión
+              SizedBox(
+                width: buttonWidth,
+                child: _OutlinedOrangeButton(
+                  onPressed: () => Navigator.pushNamed(context, '/login'),
+                  text: 'Iniciar sesión',
+                  icon: Icons.person_2_rounded,
+                ),
+              ),
+              const SizedBox(height: 20),
+
+              // 🔸 Botón Registrarse
+              SizedBox(
+                width: buttonWidth,
+                child: _OutlinedOrangeButton(
+                  onPressed: () => Navigator.pushNamed(context, '/signup'),
+                  text: 'Registrarse',
+                  icon: Icons.person_add,
+                ),
+              ),
+              const SizedBox(height: 50),
+
+              // 🔸 Texto inferior
+              Text(
+                '¡La aventura de aprender comienza ahora!',
+                style: GoogleFonts.fredoka(
+                  fontSize: 25,
+                  color: Colors.orange.shade800,
+                  fontWeight: FontWeight.bold,
+                ),
+                textAlign: TextAlign.center,
+              ),
             ],
-            stops: [0.1, 0.5, 1.0],
-          ),
-        ),
-        child: Center(
-          child: Padding(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // Logo
-                Image.asset('assets/images/edukids_logo.png', width: 150),
-                const SizedBox(height: 20),
-
-                // Título principal
-                Image.asset('assets/images/title.png', height: 140),
-
-                const SizedBox(height: 50),
-
-                // Botón Iniciar sesión
-                SizedBox(
-                  width: buttonWidth,
-                  child: _GradientButton(
-                    onPressed: () => Navigator.pushNamed(context, '/login'),
-                    text: 'Iniciar sesión',
-                    colors: const [Color(0xFFFF8C42), Color(0xFFFF8C42)],
-                    icon: Icons.person_2_rounded,
-                  ),
-                ),
-                const SizedBox(height: 20),
-
-                // Botón Registrarse
-                SizedBox(
-                  width: buttonWidth,
-                  child: _GradientButton(
-                    onPressed: () => Navigator.pushNamed(context, '/signup'),
-                    text: 'Registrarse',
-                    colors: const [Color(0xFF4CAF50), Color(0xFF4CAF50)],
-                    icon: Icons.person_add,
-                  ),
-                ),
-
-                const SizedBox(height: 50),
-
-                const Text(
-                  '¡La aventura de aprender comienza ahora!',
-                  style: TextStyle(
-                    fontSize: 30,
-                    fontWeight: FontWeight.bold,
-                    fontFamily: 'ComicNeue',
-                    color: Color.fromARGB(255, 141, 10, 255),
-                    shadows: [
-                      Shadow(
-                        blurRadius: 8,
-                        color: Colors.black26,
-                        offset: Offset(2, 2),
-                      ),
-                    ],
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-
-                const SizedBox(height: 50),
-              ],
-            ),
           ),
         ),
       ),
@@ -129,61 +140,39 @@ class WelcomeScreen extends StatelessWidget {
   }
 }
 
-class _GradientButton extends StatelessWidget {
+/// 🟠 BOTÓN CON BORDE NARANJA
+class _OutlinedOrangeButton extends StatelessWidget {
   final VoidCallback onPressed;
   final String text;
-  final List<Color> colors;
   final IconData icon;
 
-  const _GradientButton({
+  const _OutlinedOrangeButton({
     required this.onPressed,
     required this.text,
-    required this.colors,
-    this.icon = Icons.arrow_forward,
+    required this.icon,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: colors,
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
+    return OutlinedButton.icon(
+      onPressed: onPressed,
+      icon: Icon(icon, color: Colors.orange.shade800, size: 26),
+      label: Text(
+        text,
+        style: TextStyle(
+          color: Colors.orange.shade800,
+          fontSize: 20,
+          fontWeight: FontWeight.bold,
+          fontFamily: 'ComicNeue',
         ),
-        borderRadius: BorderRadius.circular(30),
-        boxShadow: [
-          BoxShadow(
-            color: colors.first.withOpacity(0.4),
-            blurRadius: 12,
-            offset: const Offset(0, 6),
-          ),
-        ],
       ),
-      child: ElevatedButton(
-        onPressed: onPressed,
-        style: ElevatedButton.styleFrom(
-          foregroundColor: Colors.white,
-          backgroundColor: Colors.transparent,
-          shadowColor: Colors.transparent,
-          padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 18),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(30),
-          ),
-          textStyle: const TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-            fontFamily: 'ComicNeue',
-          ),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, size: 26, color: Colors.white),
-            const SizedBox(width: 12),
-            Text(text),
-          ],
-        ),
+      style: OutlinedButton.styleFrom(
+        backgroundColor: Colors.white,
+        side: BorderSide(color: Colors.orange.shade800, width: 2),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+        padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 18),
+        shadowColor: Colors.orange.shade200,
+        elevation: 3,
       ),
     );
   }

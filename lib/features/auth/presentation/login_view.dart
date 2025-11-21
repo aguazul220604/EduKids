@@ -16,6 +16,7 @@ class _LoginPageState extends State<LoginPage> {
   final _passwordController = TextEditingController();
 
   bool _isLoading = false;
+  bool _obscurePassword = true;
 
   Future<void> _loginEmail() async {
     if (!_formKey.currentState!.validate()) return;
@@ -125,21 +126,38 @@ class _LoginPageState extends State<LoginPage> {
                       const SizedBox(height: 15),
                       TextFormField(
                         controller: _passwordController,
-                        obscureText: true,
+                        obscureText: _obscurePassword,
                         decoration: InputDecoration(
                           labelText: "Contraseña",
                           prefixIcon: const Icon(Icons.lock_outline),
                           filled: true,
                           fillColor: Colors.white,
+                          suffixIcon: IconButton(
+                            icon: Icon(
+                              _obscurePassword
+                                  ? Icons.visibility_off
+                                  : Icons.visibility,
+                            ),
+                            onPressed: () => setState(
+                              () => _obscurePassword = !_obscurePassword,
+                            ),
+                          ),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(14),
                             borderSide: BorderSide.none,
                           ),
                         ),
-                        validator: (v) =>
-                            v!.isEmpty ? "Ingresa tu contraseña" : null,
+                        validator: (v) {
+                          if (v == null || v.trim().isEmpty) {
+                            return "Ingresa una contraseña";
+                          } else if (v.trim().length < 6) {
+                            return "Mínimo 6 caracteres";
+                          }
+                          return null;
+                        },
                       ),
                       const SizedBox(height: 25),
+
                       SizedBox(
                         width: double.infinity,
                         height: 50,
@@ -191,6 +209,16 @@ class _LoginPageState extends State<LoginPage> {
                             ),
                           ),
                           onPressed: _isLoading ? null : _loginGoogle,
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                      TextButton(
+                        onPressed: () {
+                          Navigator.pushReplacementNamed(context, '/signup');
+                        },
+                        child: const Text(
+                          "¿Aún no tienes una cuenta? Regístrate",
+                          style: TextStyle(color: Colors.black87),
                         ),
                       ),
                     ],
